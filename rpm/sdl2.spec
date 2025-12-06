@@ -21,6 +21,8 @@ BuildRequires: pkgconfig(glesv1_cm)
 BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
+# For Malliit
+BuildRequires: pkgconfig(dbus-1)
 
 Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
 
@@ -51,6 +53,7 @@ to develop SDL applications.
   -DPULSEAUDIO=ON \
   -DSDL_RPATH=OFF \
   -DSDL_STATIC=ON \
+  -DSDL_DBUS=ON \
   -DVIDEO_WAYLAND=ON \
   -DVIDEO_X11=OFF \
   -DWAYLAND_LIBDECOR=OFF
