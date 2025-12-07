@@ -25,6 +25,7 @@ BuildRequires: pkgconfig(libpulse-simple)
 BuildRequires: pkgconfig(dbus-1)
 
 Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
+Patch1: 0002-maliit-input-method.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
