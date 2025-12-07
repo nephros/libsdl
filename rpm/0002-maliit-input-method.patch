@@ -156,10 +156,10 @@ index 2a87a7a..e0cf876 100644
      if (!SDL_IME_Init_Real) {
 diff --git a/src/core/linux/SDL_maliit.c b/src/core/linux/SDL_maliit.c
 new file mode 100644
-index 0000000..7f6fc73
+index 0000000..e9e3da3
 --- /dev/null
 +++ b/src/core/linux/SDL_maliit.c
-@@ -0,0 +1,539 @@
+@@ -0,0 +1,672 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2024 Sam Lantinga <slouken@libsdl.org>
@@ -217,6 +217,10 @@ index 0000000..7f6fc73
 +    DBusConnection *conn;
 +
 +    char* id;
++
++    SDL_bool active;
++    SDL_bool hidden;
++    SDL_bool focus;
 +
 +    SDL_Rect cursor_rect;
 +} MaliitClient;
@@ -309,22 +313,22 @@ index 0000000..7f6fc73
 +
 +static void Maliit_updateOrientation()
 +{
-+    int orientation = 270;
++    int orientation = 0;
 +    SDL_DisplayOrientation o = SDL_GetDisplayOrientation(0);
 +    if (o == SDL_ORIENTATION_UNKNOWN) {
-+        orientation = 270;
-+    }
-+    if (o == SDL_ORIENTATION_PORTRAIT) {
-+        orientation = 270;
-+    }
-+    if (o == SDL_ORIENTATION_PORTRAIT_FLIPPED) {
-+        orientation = 90;
-+    }
-+    if (o == SDL_ORIENTATION_LANDSCAPE) {
 +        orientation = 180;
 +    }
-+    if (o == SDL_ORIENTATION_LANDSCAPE_FLIPPED) {
++    if (o == SDL_ORIENTATION_PORTRAIT) {
 +        orientation = 0;
++    }
++    if (o == SDL_ORIENTATION_PORTRAIT_FLIPPED) {
++        orientation = 180;
++    }
++    if (o == SDL_ORIENTATION_LANDSCAPE) {
++        orientation = 90;
++    }
++    if (o == SDL_ORIENTATION_LANDSCAPE_FLIPPED) {
++        orientation = 270;
 +    }
 +    SDL_DBus_CallVoidMethodOnConnection(maliit_client.conn, NULL, MALIIT_IMSERVER_PATH, MALIIT_IMSERVER_INTERFACE, "appOrientationChanged",
 +                            DBUS_TYPE_INT32, &orientation, DBUS_TYPE_INVALID);
@@ -332,6 +336,7 @@ index 0000000..7f6fc73
 +
 +static void Maliit_updateWidgetInfo(SDL_bool focus)
 +{
++    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: updateWidgetInfo, focus: %s", focus ? "true" : "false");
 +    SDL_Window *focused_win = NULL;
 +    SDL_SysWMinfo info;
 +
@@ -340,20 +345,81 @@ index 0000000..7f6fc73
 +        return;
 +    }
 +
-+    Maliit_updateOrientation(focused_win);
-+
 +    SDL_VERSION(&info.version);
 +    if (!SDL_GetWindowWMInfo(focused_win, &info)) {
 +        return;
 +    }
 +
 +    char *appname = GetAppName();
++    const char *key;
 +
++    DBusMessage *msg = maliit_client.dbus->message_new_method_call(NULL,
++                                                    MALIIT_IMSERVER_PATH,
++                                                    MALIIT_IMSERVER_INTERFACE,
++                                                    "updateWidgetInformation");
++    DBusMessageIter args, dict, entry, variant;
++    
++    /*
++        focusState                bool
++        surroundingText           string
++        cursorPosition            int
++        anchorPosition            int
++        autocapitalizationEnabled hint
++        hiddenText                hint
++        predictionEnabled         hint
++        maliit-inputmethod-hints  hint
++        enterKeyType              ???
++        hasSelection              bool
++        winId                     uintXX
++        cursorRectangle           rect ( (ii) ???)
++        toolbarId                 Global extension id.
++    */
++
++    maliit_client.dbus->message_iter_init_append(msg, &args);
++    // Append a{sv}
++    maliit_client.dbus->message_iter_open_container(&args, DBUS_TYPE_ARRAY, "{sv}", &dict);      // a{
++    
++    key = "winId";
++    maliit_client.dbus->message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry);  // BEG entry
++    maliit_client.dbus->message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);               // "winId"
++    maliit_client.dbus->message_iter_open_container(&entry, DBUS_TYPE_VARIANT, "s", &variant);   // s
++    maliit_client.dbus->message_iter_append_basic(&variant, DBUS_TYPE_STRING, &appname);         // "foo"
++    maliit_client.dbus->message_iter_close_container(&entry, &variant);                          // ,
++    maliit_client.dbus->message_iter_close_container(&dict, &entry);                              // END entry
++    key = "focusState";
++    Uint32 value = maliit_client.focus ? 1 : 0;
++    maliit_client.dbus->message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry);  // BEG entry
++    maliit_client.dbus->message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);               // "focusState"
++    maliit_client.dbus->message_iter_open_container(&entry, DBUS_TYPE_VARIANT, "u", &variant);   // u
++    maliit_client.dbus->message_iter_append_basic(&variant, DBUS_TYPE_UINT32, &value);           // 1/0
++    maliit_client.dbus->message_iter_close_container(&entry, &variant);                          // ,
++    maliit_client.dbus->message_iter_close_container(&dict, &entry);                             // END entry
++    key = "toolbarId";
++    value = 0;
++    maliit_client.dbus->message_iter_open_container(&dict, DBUS_TYPE_DICT_ENTRY, NULL, &entry);  // BEG entry
++    maliit_client.dbus->message_iter_append_basic(&entry, DBUS_TYPE_STRING, &key);               // "toolbarId"
++    maliit_client.dbus->message_iter_open_container(&entry, DBUS_TYPE_VARIANT, "u", &variant);   // u
++    maliit_client.dbus->message_iter_append_basic(&variant, DBUS_TYPE_UINT32, &value);           // 0
++    maliit_client.dbus->message_iter_close_container(&entry, &variant);                          // ,
++    maliit_client.dbus->message_iter_close_container(&dict, &entry);                             // END entry
++
++    maliit_client.dbus->message_iter_close_container(&args, &dict);                              // }
++
++    // Append boolean
++    dbus_bool_t focusChanged = TRUE;
++    maliit_client.dbus->message_iter_append_basic(&args, DBUS_TYPE_BOOLEAN, &focusChanged);
++
++    maliit_client.dbus->connection_send(maliit_client.conn, msg, DBUS_TYPE_INVALID);
++    maliit_client.dbus->connection_flush(maliit_client.conn);
++    maliit_client.dbus->message_unref(msg);
++
++/*
 +    // FIXME: is the correct signature <arg type="a{sv}" name="stateInformation"/>??
 +    SDL_DBus_CallVoidMethodOnConnection(maliit_client.conn, NULL, MALIIT_IMSERVER_PATH, MALIIT_IMSERVER_INTERFACE, "updateWidgetInformation",
 +                            DBUS_TYPE_STRING, &appname,
 +                            DBUS_TYPE_BOOLEAN, &focus,
 +                            DBUS_TYPE_INVALID);
++*/
 +}
 +
 +
@@ -379,13 +445,20 @@ index 0000000..7f6fc73
 +{
 +    SDL_DBusContext *dbus = (SDL_DBusContext *)data;
 +
-+    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Handling a DBus message");
-+
-+    if (!msg) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: message is NULL!");
-+    }
-+
-+    if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "commitString")) {
++    /*
++     * ***** Context Messages *****
++     */
++    if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "activationLostEvent")) {
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: got a DBus message: %s", "activationLostEvent");
++        maliit_client.active = SDL_FALSE;
++        maliit_client.hidden = SDL_TRUE;
++        return DBUS_HANDLER_RESULT_HANDLED;
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "imInitiatedHide")) {
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: got a DBus message: %s", "imInitiatedHide");
++        SDL_SendEditingText("", 0, 0);
++        maliit_client.hidden = SDL_TRUE;
++        return DBUS_HANDLER_RESULT_HANDLED;
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "commitString")) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: got a DBus message: %s", "commitString");
 +        DBusMessageIter iter;
 +        const char *text = NULL;
@@ -393,7 +466,6 @@ index 0000000..7f6fc73
 +        dbus->message_iter_init(msg, &iter);
 +        if (dbus->message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
 +            dbus->message_iter_get_basic(&iter, &text);
-+            SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: commitString: arg s: %s", text);
 +        }
 +
 +        if (text && *text) {
@@ -409,9 +481,7 @@ index 0000000..7f6fc73
 +        }
 +
 +        return DBUS_HANDLER_RESULT_HANDLED;
-+    }
-+
-+    if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "updatePreedit")) {
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "updatePreedit")) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: got a DBus message: %s", "updatePreedit");
 +        char *text = NULL;
 +        Sint32 start_pos, end_pos;
@@ -444,16 +514,65 @@ index 0000000..7f6fc73
 +
 +        SDL_Maliit_UpdateTextRect(NULL);
 +        return DBUS_HANDLER_RESULT_HANDLED;
-+    }
-+
-+    if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "keyEvent")) {
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "keyEvent")) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "keyEvent");
-+    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "imInitiatedHide")) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "imInitiatedHide");
-+    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "mouseClickedOnPreedit")) {
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "updateInputMethodArea")) {
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "updateInputMethodArea");
++    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "selection")) {
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "selection");
++    /* 
++     * ***** Context Messages *****
++     */
++    } else if (dbus->message_is_signal(msg, MALIIT_IMSERVER_INTERFACE, "mouseClickedOnPreedit")) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "mouseClickedOnPreedit");
-+    } else if (dbus->message_is_signal(msg, MALIIT_IMCONTEXT_INTERFACE, "imInitiatedHide")) {
++    } else if (dbus->message_is_signal(msg, MALIIT_IMSERVER_INTERFACE, "imInitiatedHide")) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s", "imInitiatedHide");
++    } else if (dbus->message_is_signal(msg, MALIIT_IMSERVER_INTERFACE, "invokeAction")) {
++            const char* action; const char* sequence;
++            DBusMessageIter iter;
++            dbus->message_iter_init(msg, &iter);
++            dbus->message_iter_get_basic(&iter, &action);
++            dbus->message_iter_get_basic(&iter, &sequence);
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event not yet handled: %s: %s, %s", "invokeAction", action, sequence);
++     } else {
++        DBusMessageIter iter;
++        const char *text = NULL;
++
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Unhandled Event details:\n");
++
++        if (dbus->message_iter_init(msg, &iter)) {
++            switch (dbus->message_iter_get_arg_type(&iter)) {
++                case DBUS_TYPE_STRING: {
++                    char* value;
++                    dbus->message_iter_get_basic(&iter, &value);
++                    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event argument: %s", value);
++                    break;
++                }
++                case DBUS_TYPE_BOOLEAN: {
++                    SDL_bool value;
++                    dbus->message_iter_get_basic(&iter, &value);
++                    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event argument: %s", value ? "[TRUE]" : "[FALSE]");
++                    break;
++                }
++                case DBUS_TYPE_INT16:
++                case DBUS_TYPE_UINT16:
++                case DBUS_TYPE_INT32:
++                case DBUS_TYPE_UINT32:
++                case DBUS_TYPE_INT64:
++                case DBUS_TYPE_UINT64: {
++                    int value = 0;
++                    dbus->message_iter_get_basic(&iter, &value);
++                    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event argument: %d", (int)value);
++                    break;
++                }
++                case DBUS_TYPE_ARRAY:
++                    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event argument: %s", "{ARRAY}");
++                    break;
++                case DBUS_TYPE_STRUCT:
++                    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Event argument: %s", "(STRUCT)");
++                    break;
++            }
++        }
 +    }
 +
 +    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
@@ -462,26 +581,28 @@ index 0000000..7f6fc73
 +static void MaliitClientCallServerMethod(MaliitClient *client, const char *method)
 +{
 +    if (!client->conn) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMS method without a connection!");
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMS method without a connection!");
 +        return;
 +    }
 +    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMS method: %s", method);
 +    if(SDL_DBus_CallVoidMethodOnConnection(client->conn, NULL, MALIIT_IMSERVER_PATH, MALIIT_IMSERVER_INTERFACE, method, DBUS_TYPE_INVALID) == SDL_FALSE) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMS method FAILED");
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMS method FAILED");
 +    }
 +}
 +
-+
++/* currently unused
 +static void MaliitClientCallContextMethod(MaliitClient *client, const char *method)
 +{
 +    if (!client->conn) {
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMC method without a connection!");
 +        return;
 +    }
 +    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMC method: %s", method);
 +    if(SDL_DBus_CallVoidMethodOnConnection(client->conn, MALIIT_IMCONTEXT_PATH, MALIIT_IMCONTEXT_INTERFACE, method, DBUS_TYPE_INVALID) == SDL_FALSE) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMC method FAILED");
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: calling IMC method FAILED");
 +    }
 +}
++*/
 +
 +static char* MaliitClientGetAddress(void)
 +{
@@ -496,16 +617,16 @@ index 0000000..7f6fc73
 +
 +    dbus = maliit_client.dbus;
 +    if (!dbus) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not connect to bus.");
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not connect to bus");
 +        return NULL;
 +    }
 +
 +    SDL_DBus_QueryProperty(MALIIT_ADDRESS_SERVICE, MALIIT_ADDRESS_PATH, MALIIT_ADDRESS_INTERFACE,
 +                           "address", DBUS_TYPE_STRING, &addr);
 +    if (!addr) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not get Maliit server address!");
++        SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not get Maliit server address!");
 +    }
-+    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Server address determined from bus.");
++    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Server address determined from bus");
 +    return SDL_strdup(addr);
 +}
 +
@@ -544,7 +665,7 @@ index 0000000..7f6fc73
 +
 +SDL_bool SDL_Maliit_Init(void)
 +{
-+    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Init");
++    SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Maliit: Init");
 +    maliit_client.dbus = SDL_DBus_GetContext();
 +
 +    maliit_client.cursor_rect.x = -1;
@@ -553,19 +674,23 @@ index 0000000..7f6fc73
 +    maliit_client.cursor_rect.h = 0;
 +
 +    const char* addr = MaliitClientGetAddress();
++    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: connecting via address %s", addr);
 +
 +    if(!addr) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not get Server address.");
++        SDL_LogError(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not get Server address.");
 +        return SDL_FALSE;
 +    }
 +
 +    DBusConnection *conn = maliit_client.dbus->connection_open_private(addr, NULL);
 +    if (!conn) {
-+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not open connection");
++        SDL_LogError(SDL_LOG_CATEGORY_INPUT, "Maliit: Could not open connection");
 +        return SDL_FALSE;
 +    }
 +
 +    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: setting up message filter");
++    maliit_client.dbus->bus_add_match(conn,
++                        "type='signal', interface='com.meego.inputmethod.uiserver1'",
++                        NULL);
 +    maliit_client.dbus->bus_add_match(conn,
 +                        "type='signal', interface='com.meego.inputmethod.inputcontext1'",
 +                        NULL);
@@ -580,7 +705,7 @@ index 0000000..7f6fc73
 +void SDL_Maliit_Quit(void)
 +{
 +    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Quit");
-+    MaliitClientCallContextMethod(&maliit_client, "hideInputMethod");
++    MaliitClientCallServerMethod(&maliit_client, "hideInputMethod");
 +    if (maliit_client.conn) {
 +        maliit_client.dbus->connection_close(maliit_client.conn);
 +        maliit_client.dbus->connection_unref(maliit_client.conn);
@@ -592,15 +717,24 @@ index 0000000..7f6fc73
 +void SDL_Maliit_SetFocus(SDL_bool focused)
 +{
 +    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: SetFocus");
++    SDL_Window *focused_win = NULL;
++    focused_win = SDL_GetKeyboardFocus();
++
++    Maliit_updateOrientation();
++
 +    if (focused) {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: activating");
 +        MaliitClientCallServerMethod(&maliit_client, "activateContext");
 +        Maliit_updateWidgetInfo(focused);
 +        //MaliitClientCallServerMethod(&maliit_client, "appOrientationChanged"); // orientation, i 270
++        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: showing");
 +        MaliitClientCallServerMethod(&maliit_client, "showInputMethod");
++        maliit_client.active = SDL_TRUE;
++        maliit_client.hidden = SDL_FALSE;
 +    } else {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: de-activating");
 +        MaliitClientCallServerMethod(&maliit_client, "hideInputMethod");
++        maliit_client.hidden = SDL_TRUE;
 +    }
 +}
 +
@@ -665,7 +799,6 @@ index 0000000..7f6fc73
 +
 +void SDL_Maliit_PumpEvents(void)
 +{
-+    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT, "Maliit: Pump");
 +    SDL_DBusContext *dbus = maliit_client.dbus;
 +    DBusConnection *conn  = maliit_client.conn;
 +
