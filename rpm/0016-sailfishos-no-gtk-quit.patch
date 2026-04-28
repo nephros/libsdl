@@ -1,0 +1,34 @@
+--- a/src/SDL.c	2026-03-03 21:10:43.000000000 +0100
++++ b/src/SDL.c	2026-04-15 15:01:19.243954597 +0200
+@@ -714,7 +714,7 @@
+     SDL_DBus_Quit();
+ #endif
+ 
+-#if defined(SDL_PLATFORM_UNIX) && !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_PLATFORM_EMSCRIPTEN) && !defined(SDL_PLATFORM_PRIVATE)
++#if defined(SDL_PLATFORM_UNIX) && !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_PLATFORM_EMSCRIPTEN) && !defined(SDL_PLATFORM_SAILFISHOS) && !defined(SDL_PLATFORM_PRIVATE)
+     SDL_Gtk_Quit();
+ #endif
+ 
+--- a/src/SDL.c	2026-03-03 21:10:43.000000000 +0100
++++ b/src/SDL.c	2026-04-21 12:04:28.961627858 +0200
+@@ -30,7 +30,7 @@
+ // this checks for HAVE_DBUS_DBUS_H internally.
+ #include "core/linux/SDL_dbus.h"
+ 
+-#if defined(SDL_PLATFORM_UNIX) && !defined(SDL_PLATFORM_ANDROID)
++#if defined(SDL_PLATFORM_UNIX) && !defined(SDL_PLATFORM_ANDROID) && !defined(SDL_PLATFORM_SAILFISHOS)
+ #include "core/unix/SDL_gtk.h"
+ #endif
+ 
+--- a/src/video/wayland/SDL_waylandvideo.c	2026-03-14 03:43:25.000000000 +0100
++++ b/src/video/wayland/SDL_waylandvideo.c	2026-04-21 12:10:52.352486046 +0200
+@@ -25,7 +25,9 @@
+ 
+ #include "../../core/linux/SDL_system_theme.h"
+ #include "../../core/linux/SDL_progressbar.h"
++#ifndef SDL_PLATFORM_SAILFISHOS
+ #include "../../core/unix/SDL_gtk.h"
++#endif
+ #include "../../events/SDL_events_c.h"
+ 
+ #include "SDL_waylandclipboard.h"

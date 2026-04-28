@@ -1,0 +1,29 @@
+diff -Naur a/include/SDL3/SDL_system.h b/include/SDL3/SDL_system.h
+--- a/include/SDL3/SDL_system.h	2026-02-20 16:46:17.000000000 +0100
++++ b/include/SDL3/SDL_system.h	2026-04-14 13:57:55.002149325 +0200
+@@ -653,7 +653,8 @@
+     SDL_SANDBOX_UNKNOWN_CONTAINER,
+     SDL_SANDBOX_FLATPAK,
+     SDL_SANDBOX_SNAP,
+-    SDL_SANDBOX_MACOS
++    SDL_SANDBOX_MACOS,
++    SDL_SANDBOX_SAILJAIL,
+ } SDL_Sandbox;
+ 
+ /**
+diff -Naur a/src/SDL.c b/src/SDL.c
+--- a/src/SDL.c	2026-03-03 21:10:43.000000000 +0100
++++ b/src/SDL.c	2026-04-14 13:57:13.832589505 +0200
+@@ -865,6 +865,12 @@
+         return SDL_SANDBOX_SNAP;
+     }
+ 
++#if defined(SDL_PLATFORM_SAILFISHOS)
++    if (access("/run/firejail/dbus/user", F_OK) == 0) {
++        return SDL_SANDBOX_SAILJAIL;
++    }
++#endif
++
+     if (access("/run/host/container-manager", F_OK) == 0) {
+         return SDL_SANDBOX_UNKNOWN_CONTAINER;
+     }
