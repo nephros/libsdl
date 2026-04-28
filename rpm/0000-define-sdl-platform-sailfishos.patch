@@ -1,6 +1,8 @@
---- a/CMakeLists.txt	2026-04-04 01:10:59.000000000 +0200
-+++ c/CMakeLists.txt	2026-04-19 16:52:41.934297629 +0200
-@@ -141,6 +141,25 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b01acc3bc..fcf012bb4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -141,6 +141,25 @@ else()
    set(UNIX_OR_MAC_SYS OFF)
  endif()
  
@@ -26,7 +28,7 @@
  # Emscripten pthreads work, but you need to have a non-pthread fallback build
  #  for systems without support. It's not currently enough to not use
  #  pthread functions in a pthread-build; it won't start up on unsupported
-@@ -267,7 +286,7 @@
+@@ -267,7 +286,7 @@ if(SDL_FRAMEWORK)
    set(SDL_STATIC_AVAILABLE FALSE)
  endif()
  
@@ -35,7 +37,7 @@
    set(SDL_RPATH_DEFAULT ON)
  else()
    set(SDL_RPATH_DEFAULT OFF)
-@@ -392,6 +411,10 @@
+@@ -392,6 +411,10 @@ if(EMSCRIPTEN)
    option_string(SDL_EMSCRIPTEN_PERSISTENT_PATH  "Path to mount Emscripten IDBFS at startup or '' to disable" "")
  endif()
  
@@ -46,7 +48,7 @@
  set(SDL_VENDOR_INFO "" CACHE STRING "Vendor name and/or version to add to SDL_REVISION")
  
  cmake_dependent_option(SDL_SHARED "Build a shared version of the library" ${SDL_SHARED_DEFAULT} ${SDL_SHARED_AVAILABLE} OFF)
-@@ -430,6 +453,49 @@
+@@ -430,6 +453,49 @@ if (NGAGE)
    set(SDL_VIRTUAL_JOYSTICK OFF)
  endif()
  
@@ -96,7 +98,7 @@
  if(NOT (SDL_SHARED OR SDL_STATIC))
    message(FATAL_ERROR "SDL_SHARED and SDL_STATIC cannot both be disabled")
  endif()
-@@ -1949,6 +2015,14 @@
+@@ -1949,6 +2015,14 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
            sdl_include_directories(PRIVATE SYSTEM ${DBUS_INCLUDE_DIRS})
            # Fcitx need only dbus.
            set(HAVE_FCITX TRUE)
@@ -111,7 +113,7 @@
            set(HAVE_DBUS TRUE)
          endif()
        endif()
-@@ -1963,7 +2037,7 @@
+@@ -1963,7 +2037,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
          endif()
        endif()
  
@@ -120,7 +122,7 @@
          set(SDL_USE_IME 1)
        endif()
  
-@@ -2116,7 +2190,7 @@
+@@ -2116,7 +2190,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
  
    set(SDL_STORAGE_GENERIC 1)
    sdl_glob_sources("${SDL3_SOURCE_DIR}/src/storage/generic/*.c")
@@ -129,12 +131,12 @@
      set(SDL_STORAGE_STEAM 1)
      sdl_glob_sources(
        "${SDL3_SOURCE_DIR}/src/storage/steam/*.c"
-@@ -4352,5 +4426,12 @@
+@@ -4352,5 +4426,12 @@ endif()
  ##### Fix Objective C builds #####
  string(APPEND CMAKE_OBJC_FLAGS " ${CMAKE_C_FLAGS}")
  
 +if(SDL_WAYLAND_WL_SHELL)
-+  message(WARNING "Building with wl_shell support. This is not supported by libsdl. Do not file upstream bug reports about this.")
++  message(WARNING "Building with wl_shell support. This may breake ABI/API compatability in places. Note that this is not supported by libsdl. Do not file upstream bug reports about this.")
 +else()
 +  message(WARNING "Without built-in wl_shell you will need to handle it in any applications manually, or use a Compositor with xdg_shell support.")
 +endif()

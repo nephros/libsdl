@@ -1,0 +1,23 @@
+--- a/src/filesystem/unix/SDL_sysfilesystem.c	2026-01-01 18:48:19.000000000 +0100
++++ b/src/filesystem/unix/SDL_sysfilesystem.c	2026-04-19 16:30:23.580408553 +0200
+@@ -559,10 +559,20 @@
+         break;
+ 
+     case SDL_FOLDER_SAVEDGAMES:
++#ifdef SDL_PLATFORM_SAILFISHOS
++        result = xdg_user_dir_lookup("DOCUMENTS");
++        SDL_strlcat(result, "/Games", 128);
++        goto append_slash;
++#endif
+         SDL_SetError("Saved Games folder unavailable on XDG");
+         return NULL;
+ 
+     case SDL_FOLDER_SCREENSHOTS:
++#ifdef SDL_PLATFORM_SAILFISHOS
++        result = xdg_user_dir_lookup("PICTURES");
++        SDL_strlcat(result, "/Screenshots", 128);
++        goto append_slash;
++#endif
+         SDL_SetError("Screenshots folder unavailable on XDG");
+         return NULL;
+ 

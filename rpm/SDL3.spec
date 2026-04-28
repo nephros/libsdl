@@ -71,6 +71,16 @@ Patch13:  0013-sailfishos-lipstick-open-url.patch
 Patch14:  0014-sailfishos-lipstick-progressbar.patch
 Patch15:  0015-sailfishos-pulse-set-media-role.patch
 Patch16:  0016-sailfishos-no-gtk-quit.patch
+Patch17:  0017-sailfish-extra-xdg-folders.patch
+# this probably needs a socket connection which we have in SDL_net.
+# Patch17:  0017-sailfish-sensorfw-impl.patch
+# Patch18:  0018-sailfish-droidmedia-camera-impl.patch
+# Patch19:  0019-sailfish-handle-display-bounds.patch
+
+#Patch30: 0030-sailfish-wl-the-enemy-gate-is-always-down.patch
+
+# that's the big one!
+#Patch50: 0050-sailfishos-bring-back-wl_shell-support.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
