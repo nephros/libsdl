@@ -22,7 +22,8 @@ BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
-Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
+Patch0:  0000-cmake-respect-no-color.patch
+Patch1:  0000-define-sdl-platform-sailfishos.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
