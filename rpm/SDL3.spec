@@ -3,7 +3,7 @@
 # cmake of SDL requires static libs to exist
 %define keepstatic 1
 
-Summary: Simple DirectMedia Layer 2
+Summary: Simple DirectMedia Layer 3
 Name: SDL2
 Version: 2.30.10
 Release: 1
