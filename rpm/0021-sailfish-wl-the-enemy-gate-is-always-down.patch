@@ -1,0 +1,27 @@
+commit 01a1993d79bc72f4d488bdec38bb8800c1b18a4a
+Author: nephros <nemo@pgxperiiia10>
+Date:   Thu Apr 30 11:35:07 2026 +0200
+
+    [Sailfish OS] video: Report natural orientation as portrait
+
+diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
+index 98bf856c8..7e1ea3622 100644
+--- a/src/video/wayland/SDL_waylandvideo.c
++++ b/src/video/wayland/SDL_waylandvideo.c
+@@ -1082,11 +1082,16 @@ static void handle_wl_output_done(void *data, struct wl_output *output)
+ 
+     if (internal->display == 0) {
+         // First time getting display info, initialize the VideoDisplay
++#ifdef SDL_PLATFORM_SAILFISHOS
++        // Sailfish OS displays are always portrait:
++        internal->placeholder.natural_orientation = SDL_ORIENTATION_PORTRAIT;
++#else
+         if (internal->physical_width_mm >= internal->physical_height_mm) {
+             internal->placeholder.natural_orientation = SDL_ORIENTATION_LANDSCAPE;
+         } else {
+             internal->placeholder.natural_orientation = SDL_ORIENTATION_PORTRAIT;
+         }
++#endif
+         internal->placeholder.current_orientation = internal->orientation;
+         internal->placeholder.internal = internal;
+ 
