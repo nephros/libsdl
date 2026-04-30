@@ -1,0 +1,25 @@
+commit 4eebdf51080591b2775b83673d7ad8fb745ed824
+Author: nephros <nemo@pgxperiiia10>
+Date:   Thu Apr 30 11:08:41 2026 +0200
+
+    [Sailfish OS] video: Define as fullscreen-only device
+    
+    While this is a bit hackish, it should make most apps actually work
+    better initially under Lipstick.
+
+diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
+index 40281b6e9..98bf856c8 100644
+--- a/src/video/wayland/SDL_waylandvideo.c
++++ b/src/video/wayland/SDL_waylandvideo.c
+@@ -710,6 +710,11 @@ static SDL_VideoDevice *Wayland_CreateDevice(bool require_preferred_protocols)
+                           VIDEO_DEVICE_CAPS_SENDS_DISPLAY_CHANGES |
+                           VIDEO_DEVICE_CAPS_SENDS_HDR_CHANGES;
+ 
++#ifdef SDL_PLATFORM_SAILFISHOS
++    device->device_caps |= VIDEO_DEVICE_CAPS_FULLSCREEN_ONLY;
++//    device->device_caps &= ~VIDEO_DEVICE_CAPS_HAS_POPUP_WINDOW_SUPPORT;
++#endif
++
+     return device;
+ }
+ 

@@ -77,6 +77,7 @@ Patch17:  0017-sailfish-extra-xdg-folders.patch
 # Patch18:  0018-sailfish-droidmedia-camera-impl.patch
 # Patch19:  0019-sailfish-handle-display-bounds.patch
 
+Patch20: 0020-sailfishos-force-always-fullscreen.patch
 #Patch30: 0030-sailfish-wl-the-enemy-gate-is-always-down.patch
 
 # that's the big one!
