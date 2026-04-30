@@ -14,7 +14,7 @@ index 98bf856c8..7e1ea3622 100644
          // First time getting display info, initialize the VideoDisplay
 +#ifdef SDL_PLATFORM_SAILFISHOS
 +        // Sailfish OS displays are always portrait:
-+        internal->placeholder.natural_orientation = SDL_ORIENTATION_PORTRAIT;
++        internal->placeholder.natural_orientation = SDL_ORIENTATION_LANDSCAPE;
 +#else
          if (internal->physical_width_mm >= internal->physical_height_mm) {
              internal->placeholder.natural_orientation = SDL_ORIENTATION_LANDSCAPE;
