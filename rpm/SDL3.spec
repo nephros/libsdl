@@ -74,11 +74,12 @@ Patch16:  0016-sailfishos-no-gtk-quit.patch
 Patch17:  0017-sailfish-extra-xdg-folders.patch
 # this probably needs a socket connection which we have in SDL_net.
 # Patch17:  0017-sailfish-sensorfw-impl.patch
-# Patch18:  0018-sailfish-droidmedia-camera-impl.patch
 # Patch19:  0019-sailfish-handle-display-bounds.patch
 
 Patch20: 0020-sailfishos-force-always-fullscreen.patch
 Patch21: 0021-sailfish-wl-the-enemy-gate-is-always-down.patch
+
+Patch30:  0030-sailfish-droidmedia-camera-impl.patch
 
 # that's the big one!
 #Patch50: 0050-sailfishos-bring-back-wl_shell-support.patch
