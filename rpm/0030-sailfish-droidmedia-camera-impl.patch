@@ -113,10 +113,10 @@ index 40c4ae9fe..f45a975fd 100644
  #endif // SDL_syscamera_h_
 diff --git a/src/camera/droidmedia/SDL_camera_droidmedia.c b/src/camera/droidmedia/SDL_camera_droidmedia.c
 new file mode 100644
-index 000000000..dfe21eef3
+index 000000000..caa80c2c1
 --- /dev/null
 +++ b/src/camera/droidmedia/SDL_camera_droidmedia.c
-@@ -0,0 +1,907 @@
+@@ -0,0 +1,896 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>
@@ -151,13 +151,6 @@ index 000000000..dfe21eef3
 +
 +#define LOCAL_UNUSED(x) (void)(x)
 +
-+#if defined(NDEBUG)
-+#ifdef DEBUG_CAMERA
-+#undef DEBUG_CAMERA
-+#endif
-+#define DEBUG_CAMERA 1
-+#endif
-+
 +#define KEY_PARAM_PREVIEW_FMT        "preview-format"
 +//#define KEY_PARAM_PREVIEW_SIZE       "preferred-preview-size-for-video"
 +#define KEY_PARAM_PREVIEW_SIZE       "preview-size"
@@ -166,6 +159,7 @@ index 000000000..dfe21eef3
 +#define KEY_PARAM_VIDEO_SIZES_LIST   "preview-size-values"
 +#define KEY_PARAM_VIDEO_SIZE         "video-size"
 +#define KEY_PARAM_FRAME_FORMAT       "video-frame-format"
++#define KEY_PARAM_FOCAL_LENGTH       "focal-length"
 +
 +#ifndef SDL_HAVE_YUV
 +#pragma message ( "SDL_HAVE_YUV is not defined. This would be useful to have!" )
@@ -225,8 +219,8 @@ index 000000000..dfe21eef3
 +static bool initDroid()
 +{
 +  if(!droid_media_init()) {
-+	SDL_SetError("Could not initialize droidmedia!");
-+	return false;
++    SDL_SetError("Could not initialize droidmedia!");
++    return false;
 +  }
 +
 +  droid_media_pixel_format_constants_init(&pixelFormats);
@@ -234,64 +228,64 @@ index 000000000..dfe21eef3
 +  droid_media_colour_format_constants_init(&colorFormats);
 +#if DEBUG_CAMERA
 +  SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "Initialized Pixel Formats:\n\n\
-+	  %d: HAL_PIXEL_FORMAT_RGBA_8888\n\
-+	  %d: HAL_PIXEL_FORMAT_RGBX_8888\n\
-+	  %d: HAL_PIXEL_FORMAT_RGB_888\n\
-+	  %d: HAL_PIXEL_FORMAT_RGB_565\n\
-+	  %d: HAL_PIXEL_FORMAT_BGRA_8888\n\
-+	  %d: HAL_PIXEL_FORMAT_YV12\n\
-+	  %d: HAL_PIXEL_FORMAT_RAW_SENSOR\n\
-+	  %d: HAL_PIXEL_FORMAT_YCrCb_420_SP\n\
-+	  %d: HAL_PIXEL_FORMAT_YCbCr_422_SP\n\
-+	  %d: HAL_PIXEL_FORMAT_YCbCr_422_I\n\
-+	  %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar32m\n\
-+	  %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka\n\n\
-+	  ",
-+	  pixelFormats.HAL_PIXEL_FORMAT_RGBA_8888,
-+	  pixelFormats.HAL_PIXEL_FORMAT_RGBX_8888,
-+	  pixelFormats.HAL_PIXEL_FORMAT_RGB_888,
-+	  pixelFormats.HAL_PIXEL_FORMAT_RGB_565,
-+	  pixelFormats.HAL_PIXEL_FORMAT_BGRA_8888,
-+	  pixelFormats.HAL_PIXEL_FORMAT_YV12,
-+	  pixelFormats.HAL_PIXEL_FORMAT_RAW_SENSOR,
-+	  pixelFormats.HAL_PIXEL_FORMAT_YCrCb_420_SP,
-+	  pixelFormats.HAL_PIXEL_FORMAT_YCbCr_422_SP,
-+	  pixelFormats.HAL_PIXEL_FORMAT_YCbCr_422_I,
-+	  pixelFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar32m,
-+	  pixelFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka
-+		);
++      %d: HAL_PIXEL_FORMAT_RGBA_8888\n\
++      %d: HAL_PIXEL_FORMAT_RGBX_8888\n\
++      %d: HAL_PIXEL_FORMAT_RGB_888\n\
++      %d: HAL_PIXEL_FORMAT_RGB_565\n\
++      %d: HAL_PIXEL_FORMAT_BGRA_8888\n\
++      %d: HAL_PIXEL_FORMAT_YV12\n\
++      %d: HAL_PIXEL_FORMAT_RAW_SENSOR\n\
++      %d: HAL_PIXEL_FORMAT_YCrCb_420_SP\n\
++      %d: HAL_PIXEL_FORMAT_YCbCr_422_SP\n\
++      %d: HAL_PIXEL_FORMAT_YCbCr_422_I\n\
++      %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar32m\n\
++      %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka\n\n\
++      ",
++      pixelFormats.HAL_PIXEL_FORMAT_RGBA_8888,
++      pixelFormats.HAL_PIXEL_FORMAT_RGBX_8888,
++      pixelFormats.HAL_PIXEL_FORMAT_RGB_888,
++      pixelFormats.HAL_PIXEL_FORMAT_RGB_565,
++      pixelFormats.HAL_PIXEL_FORMAT_BGRA_8888,
++      pixelFormats.HAL_PIXEL_FORMAT_YV12,
++      pixelFormats.HAL_PIXEL_FORMAT_RAW_SENSOR,
++      pixelFormats.HAL_PIXEL_FORMAT_YCrCb_420_SP,
++      pixelFormats.HAL_PIXEL_FORMAT_YCbCr_422_SP,
++      pixelFormats.HAL_PIXEL_FORMAT_YCbCr_422_I,
++      pixelFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar32m,
++      pixelFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka
++        );
 +
 +  SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "Initialized Color Formats:\n\n\
-+	  %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar32m\n\
-+	  %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka\n\
-+	  %d: OMX_COLOR_FormatYUV420Planar\n\
-+	  %d: OMX_COLOR_FormatYUV420PackedPlanar\n\
-+	  %d: OMX_COLOR_FormatYUV420SemiPlanar\n\
-+	  %d: OMX_COLOR_FormatYUV422SemiPlanar\n\
-+	  %d: OMX_COLOR_FormatL8\n\
-+	  %d: OMX_COLOR_FormatYCbYCr\n\
-+	  %d: OMX_COLOR_FormatYCrYCb\n\
-+	  %d: OMX_COLOR_FormatCbYCrY\n\
-+	  %d: OMX_COLOR_Format32bitARGB8888\n\
-+	  %d: OMX_COLOR_Format32bitBGRA8888\n\
-+	  %d: OMX_COLOR_Format16bitRGB565\n\
-+	  %d: OMX_COLOR_Format16bitBGR565\n\
-+	  ",
-+	  colorFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar32m,
-+	  colorFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka,
-+	  colorFormats.OMX_COLOR_FormatYUV420Planar,
-+	  colorFormats.OMX_COLOR_FormatYUV420PackedPlanar,
-+	  colorFormats.OMX_COLOR_FormatYUV420SemiPlanar,
-+	  colorFormats.OMX_COLOR_FormatYUV422SemiPlanar,
-+	  colorFormats.OMX_COLOR_FormatL8,
-+	  colorFormats.OMX_COLOR_FormatYCbYCr,
-+	  colorFormats.OMX_COLOR_FormatYCrYCb,
-+	  colorFormats.OMX_COLOR_FormatCbYCrY,
-+	  colorFormats.OMX_COLOR_Format32bitARGB8888,
-+	  colorFormats.OMX_COLOR_Format32bitBGRA8888,
-+	  colorFormats.OMX_COLOR_Format16bitRGB565,
-+	  colorFormats.OMX_COLOR_Format16bitBGR565
-+		);
++      %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar32m\n\
++      %d: QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka\n\
++      %d: OMX_COLOR_FormatYUV420Planar\n\
++      %d: OMX_COLOR_FormatYUV420PackedPlanar\n\
++      %d: OMX_COLOR_FormatYUV420SemiPlanar\n\
++      %d: OMX_COLOR_FormatYUV422SemiPlanar\n\
++      %d: OMX_COLOR_FormatL8\n\
++      %d: OMX_COLOR_FormatYCbYCr\n\
++      %d: OMX_COLOR_FormatYCrYCb\n\
++      %d: OMX_COLOR_FormatCbYCrY\n\
++      %d: OMX_COLOR_Format32bitARGB8888\n\
++      %d: OMX_COLOR_Format32bitBGRA8888\n\
++      %d: OMX_COLOR_Format16bitRGB565\n\
++      %d: OMX_COLOR_Format16bitBGR565\n\
++      ",
++      colorFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar32m,
++      colorFormats.QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka,
++      colorFormats.OMX_COLOR_FormatYUV420Planar,
++      colorFormats.OMX_COLOR_FormatYUV420PackedPlanar,
++      colorFormats.OMX_COLOR_FormatYUV420SemiPlanar,
++      colorFormats.OMX_COLOR_FormatYUV422SemiPlanar,
++      colorFormats.OMX_COLOR_FormatL8,
++      colorFormats.OMX_COLOR_FormatYCbYCr,
++      colorFormats.OMX_COLOR_FormatYCrYCb,
++      colorFormats.OMX_COLOR_FormatCbYCrY,
++      colorFormats.OMX_COLOR_Format32bitARGB8888,
++      colorFormats.OMX_COLOR_Format32bitBGRA8888,
++      colorFormats.OMX_COLOR_Format16bitRGB565,
++      colorFormats.OMX_COLOR_Format16bitBGR565
++        );
 +#endif
 +  return true;
 +}
@@ -319,7 +313,9 @@ index 000000000..dfe21eef3
 +
 +static void DroidCam_setupCallbacks(SDL_Camera* device)
 +{
++#if DEBUG_CAMERA
 +    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: Setting up callbacks");
++#endif
 +    {
 +        DroidMediaCameraCallbacks cb;
 +        cb.shutter_cb = DroidCam_handleShutter;
@@ -420,6 +416,8 @@ index 000000000..dfe21eef3
 +                            (float) ( (float)spec->framerate_numerator / spec->framerate_denominator),
 +                            device->name);
 +#endif
++    // passing the number through void* handle is a hassle, so we just extract
++    // it from the name.
 +    int cameraId;
 +    SDL_sscanf(device->name, "Droidmedia Camera %d", &cameraId);
 +    if (!(cameraId >= 0)) {
@@ -584,18 +582,11 @@ index 000000000..dfe21eef3
 +static void DROIDCAMERA_ReleaseFrame(SDL_Camera *device, SDL_Surface *frame)
 +{
 +LOCAL_UNUSED(device);
-+#ifdef DEBUG_CAMERA
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: ReleaseFrame");
-+#endif
 +    SDL_aligned_free(frame->pixels);
 +}
 +
 +static void DROIDCAMERA_DetectDevices(void)
 +{
-+#ifdef DEBUG_CAMERA
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: DetectDevices");
-+#endif
-+
 +    int num_cameras = droid_media_camera_get_number_of_cameras();
 +    if (num_cameras == 0) {
 +        SDL_SetError("No Cameras found!");
@@ -616,6 +607,11 @@ index 000000000..dfe21eef3
 +        }
 +
 +        SDL_CameraPosition position = DroidCam_camPositionToSDLPosition(info.facing);
++
++        char* focal_length = DroidCam_getCamParameter(cam, KEY_PARAM_FOCAL_LENGTH);
++        float fl;
++        SDL_sscanf(focal_length, "%f", &fl);
++        SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "Focal langth: %f", fl);
 +
 +        char fullname[24];
 +        SDL_snprintf(fullname, sizeof(fullname),"Droidmedia Camera %d", num);
@@ -652,7 +648,6 @@ index 000000000..dfe21eef3
 +
 +static void DROIDCAMERA_Deinitialize(void)
 +{
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: Deinitialize");
 +    droid_media_deinit();
 +}
 +
@@ -694,7 +689,9 @@ index 000000000..dfe21eef3
 +
 +static bool DroidCam_setCamParameter(SDL_Camera* device, const char* key, const char* value)
 +{
++#ifdef DEBUG_CAMERA
 +    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "Setting camera parameter: %s=%s", key, value);
++#endif
 +    SDL_PropertiesID props = device->hidden->parameters;
 +    if(DroidCam_isReadonlyCamProperty(key)) {
 +        SDL_LogWarn(SDL_LOG_CATEGORY_SYSTEM, "Read-only Parameter: %s, ignored!", key);
@@ -748,7 +745,6 @@ index 000000000..dfe21eef3
 +        }
 +    }
 +    device->hidden->parameters = props;
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "Camera reported %u parameters.", numparm);
 +}
 +
 +static char* DroidCam_getCamParameter(DroidMediaCamera* camera, const char* key)
@@ -806,9 +802,6 @@ index 000000000..dfe21eef3
 +    return data;
 +}
 +static void DroidCam_handleError(void* data, int error) {
-+#if DEBUG_CAMERA
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: >> handleError: %d", error);
-+#endif
 +    SDL_Camera* dev = (SDL_Camera*)data;
 +    char errorName[25];
 +    if (error == cameraConstants.CAMERA_ERROR_UNKNOWN) {
@@ -849,10 +842,6 @@ index 000000000..dfe21eef3
 +
 +static void DroidCam_handlePreviewFrame(void *data, DroidMediaData *mem)
 +{
-+#if DEBUG_CAMERA
-+    SDL_LogDebug(SDL_LOG_CATEGORY_SYSTEM, "DROIDCAMERA: >> handlePreviewFrame");
-+#endif
-+
 +    SDL_Camera* device = (SDL_Camera*)data;
 +    // DroidMediaBufferInfo is actually for buffer callbacks.
 +    // But to be able to use the struct from both, fake it here:
