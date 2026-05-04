@@ -7,7 +7,7 @@
 
 Summary: Simple DirectMedia Layer 3
 Name: SDL3
-Version: 3.4.4
+Version: 3.4.8
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
