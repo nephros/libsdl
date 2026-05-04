@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index fcf012bb4..27819473c 100644
+index 808edf195..7fde4a77b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1973,6 +1973,25 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
+@@ -1972,6 +1972,25 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
        )
      endif()
  
@@ -29,7 +29,7 @@ index fcf012bb4..27819473c 100644
        set(SDL_INPUT_LINUXEV 1)
      endif()
 diff --git a/include/SDL3/SDL_hints.h b/include/SDL3/SDL_hints.h
-index 74f5bca07..d16897666 100644
+index 029e3540a..bcf9c44db 100644
 --- a/include/SDL3/SDL_hints.h
 +++ b/include/SDL3/SDL_hints.h
 @@ -4762,6 +4762,15 @@ extern "C" {
@@ -1013,19 +1013,3 @@ index 000000000..caa80c2c1
 +}
 +
 +#endif  // SDL_CAMERA_DRIVER_DROIDMEDIA
-diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
-index 98bf856c8..40281b6e9 100644
---- a/src/video/wayland/SDL_waylandvideo.c
-+++ b/src/video/wayland/SDL_waylandvideo.c
-@@ -710,11 +710,6 @@ static SDL_VideoDevice *Wayland_CreateDevice(bool require_preferred_protocols)
-                           VIDEO_DEVICE_CAPS_SENDS_DISPLAY_CHANGES |
-                           VIDEO_DEVICE_CAPS_SENDS_HDR_CHANGES;
- 
--#ifdef SDL_PLATFORM_SAILFISHOS
--    device->device_caps |= VIDEO_DEVICE_CAPS_FULLSCREEN_ONLY;
--//    device->device_caps &= ~VIDEO_DEVICE_CAPS_HAS_POPUP_WINDOW_SUPPORT;
--#endif
--
-     return device;
- }
- 
