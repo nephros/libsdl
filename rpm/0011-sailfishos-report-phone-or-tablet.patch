@@ -1,146 +1,170 @@
+commit 57433e4b74d6e7935a3585912e47982c494ca08e
+Author: nephros <nemo@pgxperiiia10>
+Date:   Tue Apr 28 09:13:16 2026 +0200
+
+    [Sailfish OS] Report device as phone or tablet
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f5de3e771..ff277f1c4 100644
+index 88728957d..f5de3e771 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -141,6 +141,25 @@ else()
-   set(UNIX_OR_MAC_SYS OFF)
- endif()
+@@ -1793,6 +1793,13 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
+     endif()
+   endif()
  
-+# See if we can detect Sailfish OS:
-+if(LINUX)
-+  if(EXISTS "${CMAKE_SYSROOT}/etc/sailfish-release")
-+    set(OS_IS_SAILFISH "true")
-+  else()
-+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-+      cmake_host_system_information(RESULT OSID QUERY DISTRIB_ID)
-+      string(COMPARE EQUAL "${OSID}" "sailfishos" OS_IS_SAILFISH)
-+      string(COMPARE EQUAL "${OSID}" "auroraos" OS_IS_AURORA)
-+    endif()
-+  endif()
-+  if(OS_IS_SAILFISH OR OS_IS_AURORA)
-+    set(SAILFISHOS ON)
-+    message(STATUS "We are unlike! Building for a Sailfish OS variant.")
-+  else()
-+    set(SAILFISHOS OFF)
-+  endif()
-+endif()
-+
- # Emscripten pthreads work, but you need to have a non-pthread fallback build
- #  for systems without support. It's not currently enough to not use
- #  pthread functions in a pthread-build; it won't start up on unsupported
-@@ -267,7 +286,7 @@ if(SDL_FRAMEWORK)
-   set(SDL_STATIC_AVAILABLE FALSE)
- endif()
- 
--if(UNIX AND NOT ANDROID AND NOT RISCOS AND NOT SDL_FRAMEWORK)
-+if(UNIX AND NOT ANDROID AND NOT RISCOS AND NOT SAILFISHOS AND NOT SDL_FRAMEWORK)
-   set(SDL_RPATH_DEFAULT ON)
- else()
-   set(SDL_RPATH_DEFAULT OFF)
-@@ -392,6 +411,10 @@ if(EMSCRIPTEN)
-   option_string(SDL_EMSCRIPTEN_PERSISTENT_PATH  "Path to mount Emscripten IDBFS at startup or '' to disable" "")
- endif()
- 
-+if(SAILFISHOS)
-+  option(SDL_WAYLAND_WL_SHELL "Enable deprecated Wayland wl_shell support" OFF)
-+endif()
-+
- set(SDL_VENDOR_INFO "" CACHE STRING "Vendor name and/or version to add to SDL_REVISION")
- 
- cmake_dependent_option(SDL_SHARED "Build a shared version of the library" ${SDL_SHARED_DEFAULT} ${SDL_SHARED_AVAILABLE} OFF)
-@@ -430,6 +453,49 @@ if (NGAGE)
-   set(SDL_VIRTUAL_JOYSTICK OFF)
- endif()
- 
-+if (SAILFISHOS)
-+  # This enables the SDL_PLATFORM_SAILFISHOS define:
-+  sdl_compile_definitions(PRIVATE "__SAILFISHOS__")
-+  set(SDL_TRAY                     OFF)
-+  set(SDL_X11                      OFF)
-+  set(SDL_X11_SHARED               OFF)
-+  set(SDL_X11_XCURSOR              OFF)
-+  set(SDL_X11_XDBE                 OFF)
-+  set(SDL_X11_XFIXES               OFF)
-+  set(SDL_X11_XINPUT               OFF)
-+  set(SDL_X11_XRANDR               OFF)
-+  set(SDL_X11_XSCRNSAVER           OFF)
-+  set(SDL_X11_XSHAPE               OFF)
-+  set(SDL_X11_XSYNC                OFF)
-+  set(SDL_X11_XTEST                OFF)
-+
-+  set(SDL_DBUS                     ON)
-+  set(SDL_OPENGL                   ON)
-+  set(SDL_OPENGLES                 ON)
-+  set(SDL_PULSEAUDIO               ON)
-+  set(SDL_PULSEAUDIO_SHARED        OFF)
-+  set(SDL_WAYLAND                  ON)
-+  set(SDL_WAYLAND_LIBDECOR         OFF)
-+  set(SDL_WAYLAND_LIBDECOR_SHARED  OFF)
-+  set(SDL_WAYLAND_SHARED           OFF)
-+
-+  #set(SDL_BACKGROUNDING_SIGNAL "SDL_EVENT_WINDOW_FOCUS_LOST")
-+  #set(SDL_FOREGROUNDING_SIGNAL "SDL_EVENT_WINDOW_FOCUS_GAINED")
-+
-+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.22)
-+    cmake_host_system_information(RESULT OSNAME QUERY DISTRIB_NAME)
-+    set(SDL_VENDOR_INFO "${OSNAME}")
-+  else()
-+    if(DEFINED ENV{NAME})
-+      set(SDL_VENDOR_INFO "$ENV{NAME}")
-+    endif()
++  if(SAILFISHOS)
++    sdl_glob_sources(
++      "${SDL3_SOURCE_DIR}/src/core/sailfishos/*.c"
++      "${SDL3_SOURCE_DIR}/src/core/sailfishos/*.h"
++    )
 +  endif()
 +
-+  if(SDL_WAYLAND_WL_SHELL)
-+    sdl_compile_definitions(PRIVATE "SDL_WAYLAND_WL_SHELL")
-+  endif()
-+endif()
+   if(SDL_AUDIO)
+     if(NETBSD)
+         set(SDL_AUDIO_DRIVER_NETBSD 1)
+diff --git a/src/SDL.c b/src/SDL.c
+index b1a1a5635..558c736f3 100644
+--- a/src/SDL.c
++++ b/src/SDL.c
+@@ -828,6 +828,18 @@ const char *SDL_GetPlatform(void)
+ #endif
+ }
+ 
++bool SDL_IsPhone(void)
++{
++#if defined(SDL_PLATFORM_ANDROID) || \
++    defined(SDL_PLATFORM_SAILFISHOS) || \
++    (defined(SDL_PLATFORM_IOS) && !defined(SDL_PLATFORM_VISIONOS))
++    if (!SDL_IsTablet() && !SDL_IsTV()) {
++        return true;
++    }
++#endif
++    return false;
++}
 +
- if(NOT (SDL_SHARED OR SDL_STATIC))
-   message(FATAL_ERROR "SDL_SHARED and SDL_STATIC cannot both be disabled")
- endif()
-@@ -1955,6 +2021,14 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
-           sdl_include_directories(PRIVATE SYSTEM ${DBUS_INCLUDE_DIRS})
-           # Fcitx need only dbus.
-           set(HAVE_FCITX TRUE)
-+          if (SAILFISHOS)
-+            pkg_search_module(MALIIT maliit-glib)
-+            if(MALIIT_FOUND)
-+              set(HAVE_MALIIT TRUE)
-+              message(CONFIGURE_LOG "FIXME: Maliit IME enabled, but not implemented!")
-+              message(STATUS "FIXME: Maliit IME enabled, but not implemented!")
-+            endif()
-+          endif()
-           set(HAVE_DBUS TRUE)
-         endif()
-       endif()
-@@ -1969,7 +2043,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
-         endif()
-       endif()
- 
--      if (HAVE_IBUS_IBUS_H OR HAVE_FCITX)
-+      if (HAVE_IBUS_IBUS_H OR HAVE_FCITX OR HAVE_MALIIT)
-         set(SDL_USE_IME 1)
-       endif()
- 
-@@ -2122,7 +2196,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
- 
-   set(SDL_STORAGE_GENERIC 1)
-   sdl_glob_sources("${SDL3_SOURCE_DIR}/src/storage/generic/*.c")
--  if(LINUX)
-+  if(LINUX AND NOT SAILFISHOS)
-     set(SDL_STORAGE_STEAM 1)
-     sdl_glob_sources(
-       "${SDL3_SOURCE_DIR}/src/storage/steam/*.c"
-@@ -4359,5 +4433,12 @@ endif()
- ##### Fix Objective C builds #####
- string(APPEND CMAKE_OBJC_FLAGS " ${CMAKE_C_FLAGS}")
- 
-+if(SDL_WAYLAND_WL_SHELL)
-+  message(WARNING "Building with wl_shell support. This may breake ABI/API compatability in places. Note that this is not supported by libsdl. Do not file upstream bug reports about this.")
-+else()
-+  message(WARNING "Without built-in wl_shell you will need to handle it in any applications manually, or use a Compositor with xdg_shell support.")
-+endif()
+ bool SDL_IsTablet(void)
+ {
+ #ifdef SDL_PLATFORM_ANDROID
+@@ -835,6 +847,8 @@ bool SDL_IsTablet(void)
+ #elif defined(SDL_PLATFORM_IOS)
+     extern bool SDL_IsIPad(void);
+     return SDL_IsIPad();
++#elif defined(SDL_PLATFORM_SAILFISHOS)
++    return SDL_IsSailfishOSTablet();
+ #else
+     return false;
+ #endif
+diff --git a/src/core/sailfishos/SDL_sailfishos.c b/src/core/sailfishos/SDL_sailfishos.c
+new file mode 100644
+index 000000000..23a433ca4
+--- /dev/null
++++ b/src/core/sailfishos/SDL_sailfishos.c
+@@ -0,0 +1,60 @@
++/*
++  Simple DirectMedia Layer
++  Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>
 +
++  This software is provided 'as-is', without any express or implied
++  warranty.  In no event will the authors be held liable for any damages
++  arising from the use of this software.
 +
- SDL_PrintSummary()
- debug_show_sdl_deps()
++  Permission is granted to anyone to use this software for any purpose,
++  including commercial applications, and to alter it and redistribute it
++  freely, subject to the following restrictions:
++
++  1. The origin of this software must not be misrepresented; you must not
++     claim that you wrote the original software. If you use this software
++     in a product, an acknowledgment in the product documentation would be
++     appreciated but is not required.
++  2. Altered source versions must be plainly marked as such, and must not be
++     misrepresented as being the original software.
++  3. This notice may not be removed or altered from any source distribution.
++*/
++#include "SDL_internal.h"
++
++#ifdef SDL_PLATFORM_SAILFISHOS
++
++#include "SDL_sailfishos.h"
++
++// new location starting from SFOS 5.1
++#define HW_RELEASE_FILENAME "/usr/lib/hw-release";
++#define HW_RELEASE_FILENAME_LEGACY "/etc/hw-release";
++
++bool SDL_IsSailfishOSTablet(void)
++{
++    bool ret = false;
++
++    FILE *file = fopen(HW_RELEASE_FILENAME, "r");
++    if (file == NULL) {
++        *file = fopen(HW_RELEASE_FILENAME_LEGACY, "r");
++        if (file == NULL) {
++            SDL_LogWarn(SDL_LOG_CATEGORY_SYSTEM, "Could not find hardware release file!";
++            return false;
++        }
++    }
++
++    char line[128];
++    while (fgets(line, sizeof(line), file) != NULL)
++    {
++        char dev[64];
++        SDL_sscanf(line, "MER_HA_DEVICE=%s", &dev);
++        if (( SDL_strcmp(dev, "tbj") == 0 )  // Original Jolla Tablet
++           || SDL_strcmp(dev, "pinetab")
++           || SDL_strcmp(dev, "pinetab2")
++           || SDL_strcmp(dev, "pipa") ) // VerandiTeams's port of Xiaomi Pad 6
++            { ret = true; break; }
++    }
++
++    return ret;
++}
++
++#endif // SDL_PLATFORM_SAILFISHOS
++
+diff --git a/src/core/sailfishos/SDL_sailfishos.h b/src/core/sailfishos/SDL_sailfishos.h
+new file mode 100644
+index 000000000..a1a8e97d7
+--- /dev/null
++++ b/src/core/sailfishos/SDL_sailfishos.h
+@@ -0,0 +1,42 @@
++/*
++  Simple DirectMedia Layer
++  Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>
++
++  This software is provided 'as-is', without any express or implied
++  warranty.  In no event will the authors be held liable for any damages
++  arising from the use of this software.
++
++  Permission is granted to anyone to use this software for any purpose,
++  including commercial applications, and to alter it and redistribute it
++  freely, subject to the following restrictions:
++
++  1. The origin of this software must not be misrepresented; you must not
++     claim that you wrote the original software. If you use this software
++     in a product, an acknowledgment in the product documentation would be
++     appreciated but is not required.
++  2. Altered source versions must be plainly marked as such, and must not be
++     misrepresented as being the original software.
++  3. This notice may not be removed or altered from any source distribution.
++*/
++#include "SDL_internal.h"
++
++#ifndef SDL_sailfishos_h
++#define SDL_sailfishos_h
++
++// Set up for C function definitions, even when using C++
++#ifdef __cplusplus
++/* *INDENT-OFF* */
++extern "C" {
++/* *INDENT-ON* */
++#endif
++
++bool SDL_IsSailfishOSTablet(void);
++
++// Ends C function definitions when using C++
++#ifdef __cplusplus
++/* *INDENT-OFF* */
++}
++/* *INDENT-ON* */
++#endif
++
++#endif // SDL_sailfishos_h
