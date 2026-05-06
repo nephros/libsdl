@@ -43,7 +43,7 @@ index ca66d9672..fad4cae9d 100644
 +                            LipstickLauncherAPI_DBUS_PATH,
 +                            LipstickLauncherAPI_DBUS_INTERFACE,
 +                            (lipstick_progress_visible ? LipstickLauncherAPI_DBUS_METHOD_START : LipstickLauncherAPI_DBUS_METHOD_STOP),
-+                            DBUS_TYPE_STRING, desktop_path, DBUS_TYPE_INVALID);
++                            DBUS_TYPE_STRING, &desktop_path, DBUS_TYPE_INVALID);
 +    SDL_free(desktop_path);
 +#else
      char *objectPath = GetDBUSObjectPath();
