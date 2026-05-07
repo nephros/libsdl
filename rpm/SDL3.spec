@@ -179,7 +179,7 @@ export CLICOLOR=0
 # SDL_*_SHARED=OFF -> link to libs rather than dlopen.
 %cmake \
   -DLIB_SUFFIX="" \
-  -DPULSEAUDIO=ON \
+  -DSDL_PULSEAUDIO=ON \
   -DSDL_RPATH=OFF \
   -DSDL_STATIC=ON \
   -DSDL_SHARED=ON \
