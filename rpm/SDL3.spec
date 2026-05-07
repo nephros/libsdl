@@ -39,6 +39,7 @@ BuildRequires: pkgconfig(vulkan)
 
 # Optional:
 BuildRequires: pkgconfig(alsa)
+BuildRequires: pkgconfig(fribidi)
 BuildRequires: pkgconfig(liburing-ffi)
 
 %if %{with tests}
