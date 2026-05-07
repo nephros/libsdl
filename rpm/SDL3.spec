@@ -39,12 +39,15 @@ BuildRequires: pkgconfig(vulkan)
 
 # Optional:
 BuildRequires: pkgconfig(alsa)
+BuildRequires: pkgconfig(liburing-ffi)
+
+%if %{with tests}
 BuildRequires: pkgconfig(libavcodec)
 BuildRequires: pkgconfig(libavformat)
 BuildRequires: pkgconfig(libavutil)
 BuildRequires: pkgconfig(libswscale)
+%endif
 
-BuildRequires: pkgconfig(liburing-ffi)
 
 # Maliit IME integration (TODO)
 %if 0%{?sailfishos_version} >= 40600
