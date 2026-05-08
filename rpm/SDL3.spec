@@ -74,6 +74,7 @@ Patch14:  0014-sailfishos-lipstick-progressbar.patch
 Patch15:  0015-sailfishos-pulse-set-media-role.patch
 Patch16:  0016-sailfishos-no-gtk-quit.patch
 Patch17:  0017-sailfish-extra-xdg-folders.patch
+Patch18:  0018-sailfishos-mce-screensaver-inhibit.patch
 # Patch19:  0019-sailfish-handle-display-bounds.patch
 
 Patch20: 0020-sailfishos-force-always-fullscreen.patch
