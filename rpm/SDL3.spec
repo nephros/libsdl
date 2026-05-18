@@ -85,8 +85,8 @@ Patch17:  0017-sailfish-extra-xdg-folders.patch
 Patch18:  0018-sailfishos-mce-screensaver-inhibit.patch
 # Patch19:  0019-sailfish-handle-display-bounds.patch
 
-Patch20: 0020-sailfishos-force-always-fullscreen.patch
-Patch21: 0021-sailfish-wl-the-enemy-gate-is-always-down.patch
+#Patch20: 0020-sailfishos-force-always-fullscreen.patch
+#Patch21: 0021-sailfish-wl-the-enemy-gate-is-always-down.patch
 Patch22: 0022-sailfish-hint-force-rotation.patch
 
 Patch30: 0030-sailfish-droidmedia-camera-impl.patch
