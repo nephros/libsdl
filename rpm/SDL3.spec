@@ -74,7 +74,6 @@ Suggests: vulkan-drivers
 Patch0:  0000-cmake-respect-no-color.patch
 Patch1:  0000-define-sdl-platform-sailfishos.patch
 
-Patch10:  0010-sailfishos-platform-readme.patch
 Patch11:  0011-sailfishos-report-phone-or-tablet.patch
 Patch12:  0012-sailfishos-sailjail-sandbox.patch
 Patch13:  0013-sailfishos-lipstick-open-url.patch
