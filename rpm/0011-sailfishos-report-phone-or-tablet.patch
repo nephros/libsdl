@@ -1,14 +1,14 @@
-commit 57433e4b74d6e7935a3585912e47982c494ca08e
+commit a0a5a2b47f8e654e048adccb9087df15eae892e5
 Author: nephros <nemo@pgxperiiia10>
 Date:   Tue Apr 28 09:13:16 2026 +0200
 
     [Sailfish OS] Report device as phone or tablet
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 88728957d..f5de3e771 100644
+index 72c7cf3f1..63b76b10e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1793,6 +1793,13 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
+@@ -1877,6 +1877,13 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
      endif()
    endif()
  
@@ -23,7 +23,7 @@ index 88728957d..f5de3e771 100644
      if(NETBSD)
          set(SDL_AUDIO_DRIVER_NETBSD 1)
 diff --git a/src/SDL.c b/src/SDL.c
-index b1a1a5635..558c736f3 100644
+index b05804993..d599d7ca0 100644
 --- a/src/SDL.c
 +++ b/src/SDL.c
 @@ -828,6 +828,18 @@ const char *SDL_GetPlatform(void)
@@ -56,7 +56,7 @@ index b1a1a5635..558c736f3 100644
  #endif
 diff --git a/src/core/sailfishos/SDL_sailfishos.c b/src/core/sailfishos/SDL_sailfishos.c
 new file mode 100644
-index 000000000..23a433ca4
+index 000000000..957782cff
 --- /dev/null
 +++ b/src/core/sailfishos/SDL_sailfishos.c
 @@ -0,0 +1,60 @@
@@ -87,8 +87,8 @@ index 000000000..23a433ca4
 +#include "SDL_sailfishos.h"
 +
 +// new location starting from SFOS 5.1
-+#define HW_RELEASE_FILENAME "/usr/lib/hw-release";
-+#define HW_RELEASE_FILENAME_LEGACY "/etc/hw-release";
++#define HW_RELEASE_FILENAME "/usr/lib/hw-release"
++#define HW_RELEASE_FILENAME_LEGACY "/etc/hw-release"
 +
 +bool SDL_IsSailfishOSTablet(void)
 +{
@@ -96,9 +96,9 @@ index 000000000..23a433ca4
 +
 +    FILE *file = fopen(HW_RELEASE_FILENAME, "r");
 +    if (file == NULL) {
-+        *file = fopen(HW_RELEASE_FILENAME_LEGACY, "r");
++        file = fopen(HW_RELEASE_FILENAME_LEGACY, "r");
 +        if (file == NULL) {
-+            SDL_LogWarn(SDL_LOG_CATEGORY_SYSTEM, "Could not find hardware release file!";
++            SDL_LogWarn(SDL_LOG_CATEGORY_SYSTEM, "Could not find hardware release file!");
 +            return false;
 +        }
 +    }
@@ -107,7 +107,7 @@ index 000000000..23a433ca4
 +    while (fgets(line, sizeof(line), file) != NULL)
 +    {
 +        char dev[64];
-+        SDL_sscanf(line, "MER_HA_DEVICE=%s", &dev);
++        SDL_sscanf(line, "MER_HA_DEVICE=%s", dev);
 +        if (( SDL_strcmp(dev, "tbj") == 0 )  // Original Jolla Tablet
 +           || SDL_strcmp(dev, "pinetab")
 +           || SDL_strcmp(dev, "pinetab2")
