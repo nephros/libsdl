@@ -1,11 +1,11 @@
-commit 1caf2d2432031c4af11cb0cdc9220e2c1323309d
+commit bdb3baf1c1235edc19f2eab8350856717a363700
 Author: nephros <nemo@pgxperiiia10>
 Date:   Tue Apr 28 10:15:50 2026 +0200
 
     [Sailfish OS] Use Lipstick DBus call for launch feedback
 
 diff --git a/src/core/linux/SDL_progressbar.c b/src/core/linux/SDL_progressbar.c
-index ca66d9672..fad4cae9d 100644
+index ca66d9672..d51a734b4 100644
 --- a/src/core/linux/SDL_progressbar.c
 +++ b/src/core/linux/SDL_progressbar.c
 @@ -32,6 +32,13 @@
@@ -42,7 +42,7 @@ index ca66d9672..fad4cae9d 100644
 +    SDL_DBus_CallVoidMethod(LipstickLauncherAPI_DBUS_NODE,
 +                            LipstickLauncherAPI_DBUS_PATH,
 +                            LipstickLauncherAPI_DBUS_INTERFACE,
-+                            (lipstick_progress_visible ? LipstickLauncherAPI_DBUS_METHOD_START : LipstickLauncherAPI_DBUS_METHOD_STOP),
++                            (lipstick_progress_visible == 1) ? LipstickLauncherAPI_DBUS_METHOD_START : LipstickLauncherAPI_DBUS_METHOD_STOP,
 +                            DBUS_TYPE_STRING, &desktop_path, DBUS_TYPE_INVALID);
 +    SDL_free(desktop_path);
 +#else

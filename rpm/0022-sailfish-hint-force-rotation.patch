@@ -1,4 +1,4 @@
-commit 191f48eca0b112e8c4d7cfb4ebd315c6c0c56ed1
+commit 55de27baac51ef6378041cdfd9e623fadd3824a1
 Author: nephros <nemo@JollaC2>
 Date:   Mon May 18 11:16:10 2026 +0200
 
@@ -37,10 +37,10 @@ index 029e3540a..37c7bac2a 100644
   * A variable controlling whether the libdecor Wayland backend is allowed to
   * be used.
 diff --git a/src/video/wayland/SDL_waylandwindow.c b/src/video/wayland/SDL_waylandwindow.c
-index 913209af0..47c2893d5 100644
+index 913209af0..028c7013a 100644
 --- a/src/video/wayland/SDL_waylandwindow.c
 +++ b/src/video/wayland/SDL_waylandwindow.c
-@@ -2791,6 +2791,41 @@ bool Wayland_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_Proper
+@@ -2791,6 +2791,45 @@ bool Wayland_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_Proper
              wp_alpha_modifier_surface_v1_set_multiplier(data->wp_alpha_modifier_surface_v1, SDL_MAX_UINT32);
          }
      }
@@ -74,7 +74,11 @@ index 913209af0..47c2893d5 100644
 +        }
 +
 +        SDL_LogInfo(SDL_LOG_CATEGORY_VIDEO, "Wayland: forcing output transformation: %s (%d)", forced_rotation, transform);
-+        wl_surface_set_buffer_transform(data->surface, transform);
++        if(!data->surface) {
++            SDL_LogError(SDL_LOG_CATEGORY_VIDEO, "Wayland: forcing output transformation: no wl_surface!");
++        } else {
++            wl_surface_set_buffer_transform(data->surface, transform);
++        }
 +    } else {
 +        SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "Wayland: not forcing output transformation");
 +    }
