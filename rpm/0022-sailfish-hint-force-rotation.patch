@@ -1,0 +1,84 @@
+commit 191f48eca0b112e8c4d7cfb4ebd315c6c0c56ed1
+Author: nephros <nemo@JollaC2>
+Date:   Mon May 18 11:16:10 2026 +0200
+
+    [Sailfish OS] Add a hint to force Wayland Output Transform
+
+diff --git a/include/SDL3/SDL_hints.h b/include/SDL3/SDL_hints.h
+index 029e3540a..37c7bac2a 100644
+--- a/include/SDL3/SDL_hints.h
++++ b/include/SDL3/SDL_hints.h
+@@ -3903,6 +3903,27 @@ extern "C" {
+  */
+ #define SDL_HINT_VIDEO_SYNC_WINDOW_OPERATIONS "SDL_VIDEO_SYNC_WINDOW_OPERATIONS"
+ 
++/**
++ * A variable controlling whether the Wayland output is rotated.
++ *
++ * The Wayland buffer will have a transformation corresponding to the value used applied.
++ *
++ * The variable can be set to the following values:
++ *
++ * - "0":  No forced rotation (default)
++ * - "90":  rotate by 90 degrees counter-clockwise.
++ * - "180": rotate by 180 degrees counter-clockwise.
++ * - "270": rotate by 270 degrees counter-clockwise.
++ * - "0f":  180 degree flip around a vertical axis.
++ * - "90f": flip and rotate 90 degrees counter-clockwise
++ * - "180f": flip and rotate 180 degrees counter-clockwise
++ * - "270f": flip and rotate 270 degrees counter-clockwise
++ *
++ * This hint should be set before the main Window is created.
++ *
++ */
++#define SDL_HINT_VIDEO_SAILFISHOS_FORCE_ROTATION "SDL_VIDEO_SAILFISHOS_FORCE_ROTATION"
++
+ /**
+  * A variable controlling whether the libdecor Wayland backend is allowed to
+  * be used.
+diff --git a/src/video/wayland/SDL_waylandwindow.c b/src/video/wayland/SDL_waylandwindow.c
+index 913209af0..47c2893d5 100644
+--- a/src/video/wayland/SDL_waylandwindow.c
++++ b/src/video/wayland/SDL_waylandwindow.c
+@@ -2791,6 +2791,41 @@ bool Wayland_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_Proper
+             wp_alpha_modifier_surface_v1_set_multiplier(data->wp_alpha_modifier_surface_v1, SDL_MAX_UINT32);
+         }
+     }
++#ifdef SDL_PLATFORM_SAILFISHOS
++    const char* forced_rotation = SDL_GetHint(SDL_HINT_VIDEO_SAILFISHOS_FORCE_ROTATION);
++    if (forced_rotation != NULL) {
++        uint transform = 0;
++        if (SDL_strcmp("0", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_NORMAL;
++        } else
++        if (SDL_strcmp("90", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_90;
++        } else
++        if (SDL_strcmp("180", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_180;
++        } else
++        if (SDL_strcmp("270", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_270;
++        } else
++        if (SDL_strcmp("0f", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_FLIPPED;
++        } else
++        if (SDL_strcmp("90f", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_FLIPPED_90;
++        } else
++        if (SDL_strcmp("180f", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_FLIPPED_180;
++        } else
++        if (SDL_strcmp("270f", forced_rotation) == 0) {
++            transform = WL_OUTPUT_TRANSFORM_FLIPPED_270;
++        }
++
++        SDL_LogInfo(SDL_LOG_CATEGORY_VIDEO, "Wayland: forcing output transformation: %s (%d)", forced_rotation, transform);
++        wl_surface_set_buffer_transform(data->surface, transform);
++    } else {
++        SDL_LogDebug(SDL_LOG_CATEGORY_VIDEO, "Wayland: not forcing output transformation");
++    }
++#endif
+ 
+     // Must be called before EGL configuration to set the drawable backbuffer size.
+     ConfigureWindowGeometry(window);
