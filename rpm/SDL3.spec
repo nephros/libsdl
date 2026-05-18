@@ -2,12 +2,20 @@
 %bcond_with tests
 %bcond_with examples
 
+%if 0%{?_chum}
+%define sdl_vendor_info "Sailfish OS Chum"
+%else
+%define sdl_vendor_info "Sailfish OS"
+%endif
+
 # cmake of SDL requires static libs to exist
 %define keepstatic 1
 
 Summary: Simple DirectMedia Layer 3
 Name: SDL3
+# set the macro to avoid OBS revision mangling:
 Version: 3.4.8
+%define sdl_version  3.4.8
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
@@ -185,6 +193,8 @@ export CLICOLOR=0
 # SDL_*_SHARED=OFF -> link to libs rather than dlopen.
 %cmake \
   -DLIB_SUFFIX="" \
+  -DSDL_REVISION="SDL-%{sdl_version}-%{release}" \
+  -DSDL_VENDOR_INFO="%{sdl_vendor_info}" \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_RPATH=OFF \
   -DSDL_STATIC=ON \
