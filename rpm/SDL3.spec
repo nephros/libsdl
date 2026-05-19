@@ -77,7 +77,7 @@ Patch1:  0000-define-sdl-platform-sailfishos.patch
 Patch11:  0011-sailfishos-report-phone-or-tablet.patch
 Patch12:  0012-sailfishos-sailjail-sandbox.patch
 Patch13:  0013-sailfishos-lipstick-open-url.patch
-Patch14:  0014-sailfishos-lipstick-progressbar.patch
+#Patch14:  0014-sailfishos-lipstick-progressbar.patch
 Patch15:  0015-sailfishos-pulse-set-media-role.patch
 Patch16:  0016-sailfishos-no-gtk-quit.patch
 Patch17:  0017-sailfish-extra-xdg-folders.patch
