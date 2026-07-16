@@ -71,7 +71,7 @@ BuildRequires: config(sailfish-version-variant)
 # As it may pull useless things like amdgpu, lets suggest, not recommend it:
 Suggests: vulkan-drivers
 
-#Patch0:  0000-cmake-respect-no-color.patch
+Patch0:  0000-cmake-respect-no-color.patch
 Patch1:  0000-define-sdl-platform-sailfishos.patch
 
 Patch11:  0011-sailfishos-report-phone-or-tablet.patch
