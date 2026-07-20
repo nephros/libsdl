@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 808edf195..7fde4a77b 100644
+index 83581c5a9..b32a98aaa 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1972,6 +1972,25 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
+@@ -1990,6 +1990,25 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
        )
      endif()
  
@@ -29,10 +29,10 @@ index 808edf195..7fde4a77b 100644
        set(SDL_INPUT_LINUXEV 1)
      endif()
 diff --git a/include/SDL3/SDL_hints.h b/include/SDL3/SDL_hints.h
-index 029e3540a..bcf9c44db 100644
+index cce34f3ba..da0d1d6ea 100644
 --- a/include/SDL3/SDL_hints.h
 +++ b/include/SDL3/SDL_hints.h
-@@ -4762,6 +4762,15 @@ extern "C" {
+@@ -4806,6 +4806,15 @@ extern "C" {
   */
  #define SDL_HINT_PEN_TOUCH_EVENTS "SDL_PEN_TOUCH_EVENTS"
  
@@ -49,10 +49,10 @@ index 029e3540a..bcf9c44db 100644
   * An enumeration of hint priorities.
   *
 diff --git a/include/build_config/SDL_build_config.h.cmake b/include/build_config/SDL_build_config.h.cmake
-index 520b72177..b5a6eff84 100644
+index 17cb8f257..35b2eda84 100644
 --- a/include/build_config/SDL_build_config.h.cmake
 +++ b/include/build_config/SDL_build_config.h.cmake
-@@ -546,6 +546,8 @@
+@@ -545,6 +545,8 @@
  #cmakedefine SDL_CAMERA_DRIVER_PIPEWIRE_DYNAMIC @SDL_CAMERA_DRIVER_PIPEWIRE_DYNAMIC@
  #cmakedefine SDL_CAMERA_DRIVER_VITA 1
  
@@ -62,7 +62,7 @@ index 520b72177..b5a6eff84 100644
  
  /* Enable dialog subsystem */
 diff --git a/src/SDL_internal.h b/src/SDL_internal.h
-index e2debb96b..2a800742e 100644
+index 475009366..85768f4bf 100644
 --- a/src/SDL_internal.h
 +++ b/src/SDL_internal.h
 @@ -207,6 +207,7 @@
