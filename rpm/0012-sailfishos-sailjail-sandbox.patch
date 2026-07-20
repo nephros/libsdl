@@ -1,7 +1,14 @@
-diff -Naur a/include/SDL3/SDL_system.h b/include/SDL3/SDL_system.h
---- a/include/SDL3/SDL_system.h	2026-02-20 16:46:17.000000000 +0100
-+++ b/include/SDL3/SDL_system.h	2026-04-14 13:57:55.002149325 +0200
-@@ -653,7 +653,8 @@
+commit 319712b9994e3650039fb81e7e33bdb7defc0ea2
+Author: nephros <nemo@pgxperiiia10>
+Date:   Tue Apr 28 09:14:13 2026 +0200
+
+    [Sailfish OS] Detect SailJail as sandbox
+
+diff --git a/include/SDL3/SDL_system.h b/include/SDL3/SDL_system.h
+index ec23a1fe7..9b4f08607 100644
+--- a/include/SDL3/SDL_system.h
++++ b/include/SDL3/SDL_system.h
+@@ -653,7 +653,8 @@ typedef enum SDL_Sandbox
      SDL_SANDBOX_UNKNOWN_CONTAINER,
      SDL_SANDBOX_FLATPAK,
      SDL_SANDBOX_SNAP,
@@ -11,10 +18,11 @@ diff -Naur a/include/SDL3/SDL_system.h b/include/SDL3/SDL_system.h
  } SDL_Sandbox;
  
  /**
-diff -Naur a/src/SDL.c b/src/SDL.c
---- a/src/SDL.c	2026-03-03 21:10:43.000000000 +0100
-+++ b/src/SDL.c	2026-04-14 13:57:13.832589505 +0200
-@@ -865,6 +865,12 @@
+diff --git a/src/SDL.c b/src/SDL.c
+index 3e61b8ad4..cd7861bba 100644
+--- a/src/SDL.c
++++ b/src/SDL.c
+@@ -868,6 +868,12 @@ static SDL_Sandbox SDL_DetectSandbox(void)
          return SDL_SANDBOX_SNAP;
      }
  
