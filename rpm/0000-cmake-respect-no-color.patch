@@ -1,11 +1,13 @@
-commit d8377d648062bcc09c2e73624c9bca8d98fd9503
-Author: Peter G. (nephros) <sailfish@nephros.org>
-Date:   Thu Apr 16 09:23:13 2026 +0200
+commit f8d7e13338618d664cb171227ba870791344e95b
+Author: nephros <nemo@pgxperiiia10>
+Date:   Tue Apr 28 09:07:50 2026 +0200
 
-    CMake: respect CMAKE_COLOR_DIAGNOSTICS
+    [Sailfish OS] cmake: respect no-color environment
+    
+    Coloured output makes OBS build logs unreadable
 
 diff --git a/cmake/sdlcompilers.cmake b/cmake/sdlcompilers.cmake
-index ab62c5012..b9aac8f25 100644
+index cd4dde0f6..13639af6e 100644
 --- a/cmake/sdlcompilers.cmake
 +++ b/cmake/sdlcompilers.cmake
 @@ -151,15 +151,17 @@ function(SDL_AddCommonCompilerFlags TARGET)
