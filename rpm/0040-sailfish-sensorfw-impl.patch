@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 72c7cf3f1..b3f4b75d2 100644
+index 83581c5a9..94f447d9a 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -2172,6 +2172,21 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
@@ -25,10 +25,10 @@ index 72c7cf3f1..b3f4b75d2 100644
  
    if(SDL_CLOCK_GETTIME)
 diff --git a/include/build_config/SDL_build_config.h.cmake b/include/build_config/SDL_build_config.h.cmake
-index 520b72177..fb100812d 100644
+index 17cb8f257..b2421bcf7 100644
 --- a/include/build_config/SDL_build_config.h.cmake
 +++ b/include/build_config/SDL_build_config.h.cmake
-@@ -348,6 +348,7 @@
+@@ -347,6 +347,7 @@
  #cmakedefine SDL_SENSOR_DUMMY 1
  #cmakedefine SDL_SENSOR_VITA 1
  #cmakedefine SDL_SENSOR_N3DS 1
