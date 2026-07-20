@@ -1,11 +1,11 @@
-commit f57da5db7e3b0723b34a3f370a346071172253f9
+commit 4e4647fb6384f20449e9623736e51ad68a570d19
 Author: nephros <nemo@pgxperiiia10>
 Date:   Tue Apr 28 09:10:17 2026 +0200
 
     [Sailfish OS] Add SDL platform SAILFISHOS
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 88728957d..72c7cf3f1 100644
+index 93a99bc36..83581c5a9 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -141,6 +141,37 @@ else()
